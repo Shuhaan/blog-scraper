@@ -40,7 +40,7 @@ def scrape_blog_links(url):
 # Start scraping from the first page
 next_page_url = start_url
 
-while next_page_url:
+while start_url in next_page_url:
     print(f"Scraping: {next_page_url}")
     next_page_url = scrape_blog_links(next_page_url)
 
