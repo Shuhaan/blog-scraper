@@ -43,18 +43,6 @@ def scrape_blog_links(url):
         return None
 
 
-# Start scraping from the first page
-next_page_url = start_url
-
-while start_url in next_page_url:
-    print(f"Scraping: {next_page_url}")
-    next_page_url = scrape_blog_links(next_page_url)
-
-# Output the extracted blog links
-print(f"Total blog links scraped: {len(blog_links)}")
-# print(list(blog_links))                                   # long list of all blog links
-
-
 def get_blog_content(blog_url):
     try:
         # Fetch the blog page
@@ -66,10 +54,9 @@ def get_blog_content(blog_url):
 
         soup = BeautifulSoup(response.text, "html.parser")
 
+        article_body_div = soup.find("div", class_="article-body")
         article_body = (
-            soup.find("div", class_="article-body").text.strip()
-            if soup.find("div", class_="article-body").text.strip()
-            else "Blog not found"
+            article_body_div.text.strip() if article_body_div else "Blog not found"
         )
 
         return article_body
@@ -78,13 +65,23 @@ def get_blog_content(blog_url):
         return {"error": f"Error occurred while scraping the blog: {str(e)}"}
 
 
-json_data = {}
+if __name__ == "__main__":
+    # Start scraping from the first page
+    next_page_url = start_url
 
-for blog_url in blog_links:
-    print(f"Scraping: {blog_url}")
-    article_body = get_blog_content(blog_url)
-    blog_name = blog_url.split("/")[4]
-    json_data[blog_name] = article_body
+    while next_page_url:
+        print(f"Scraping: {next_page_url}")
+        next_page_url = scrape_blog_links(next_page_url)
 
-with open("blogs.json", "w", encoding="utf-8") as file:
-    json.dump(json_data, file, ensure_ascii=False, indent=4)
+    # Output the extracted blog links
+    print(f"Total blog links scraped: {len(blog_links)}")
+
+    json_data = {}
+
+    for blog_url in blog_links:
+        print(f"Scraping: {blog_url}")
+        article_body = get_blog_content(blog_url)
+        json_data[blog_url] = article_body
+
+    with open("blogs.json", "w", encoding="utf-8") as file:
+        json.dump(json_data, file, ensure_ascii=False, indent=4)
