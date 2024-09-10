@@ -87,3 +87,11 @@ run-black:
 	
 # ## Run all checks
 # run-checks: security-test run-black check-coverage
+
+## Clean up environment
+clean:
+	rm -rf venv .pytest_cache .coverage
+	find . -type f -name '*.pyc' -delete
+	find . -type d -name '__pycache__' -delete
+	find . -type f -name '*.txt' -delete
+	find . -type f -name '*.zip' -delete
