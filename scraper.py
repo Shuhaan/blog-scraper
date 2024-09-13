@@ -2,6 +2,7 @@ import aiohttp
 import asyncio
 from bs4 import BeautifulSoup
 import json
+import re
 
 base_url = "https://uk.iherb.com"
 start_url = f"{base_url}/blog/all"
@@ -56,12 +57,32 @@ async def get_blog_content(session, blog_url):
 
             article_body_div = soup.find("div", class_="article-body")
             
-            # Return the inner HTML
-            article_body = (
-                str(article_body_div) if article_body_div else "Blog not found"
-            )
+            # Assuming 'article_body_div' contains the relevant part of the HTML
+            elements = article_body_div.find_all(recursive=False)
 
-            return article_body
+            content_list = []
+            current_tag = None
+            current_text = []
+
+            for elem in elements:
+                # If it's a heading or other tag that should act as a key
+                if elem.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p']:  # Add more tags if needed
+                    # Save the previous tag's content
+                    if current_tag is not None:
+                        content_list.append({current_tag: ' '.join(current_text)})
+                    
+                    # Start a new tag
+                    current_tag = elem.name
+                    current_text = [re.sub(r'\s+', ' ', elem.get_text(strip=True)).strip()]
+                else:
+                    # Add content under the current tag if it's not a new tag
+                    current_text.append(re.sub(r'\s+', ' ', elem.get_text(strip=True)).strip())
+
+            # Add the last tag and its content
+            if current_tag is not None:
+                content_list.append({current_tag: ' '.join(current_text)})
+
+            return content_list
 
     except Exception as e:
         return {"error": f"Error occurred while scraping the blog: {str(e)}"}
